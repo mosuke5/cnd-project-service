@@ -235,6 +235,80 @@ public class ProjectServiceTest extends MongoTestBase {
     }
     
     @Test
+    public void testGetProjectsByStatus2(TestContext context) throws Exception {
+        Async saveAsync = context.async(2);
+        String projectId1 = "111111";
+        JsonObject json1 = new JsonObject()
+                .put("projectId", projectId1)
+                .put("ownerFirstName", "Masao")
+                .put("ownerLastName", "Kato")
+                .put("ownerEmail", "masao.kato@example.com")
+                .put("projectTitle", "project-1")
+                .put("projectDescription", "project-1-desc")
+                .put("projectStatus", "open");
+
+        mongoClient.save("projects", json1, ar -> {
+            if (ar.failed()) {
+                context.fail();
+            }
+            saveAsync.countDown();
+        });
+
+        String projectId2 = "222222";
+        JsonObject json2 = new JsonObject()
+                .put("projectId", projectId2)
+                .put("ownerFirstName", "Kana")
+                .put("ownerLastName", "Komiya")
+                .put("ownerEmail", "kana.komiya@example.com")
+                .put("projectTitle", "project-2")
+                .put("projectDescription", "project-2-desc")
+                .put("projectStatus", "open");
+
+        mongoClient.save("projects", json2, ar -> {
+            if (ar.failed()) {
+                context.fail();
+            }
+            saveAsync.countDown();
+        });
+        
+        String projectId3 = "333333";
+        JsonObject json3 = new JsonObject()
+                .put("projectId", projectId3)
+                .put("ownerFirstName", "Kohei")
+                .put("ownerLastName", "Oda")
+                .put("ownerEmail", "kohei.oda@example.com")
+                .put("projectTitle", "project-3")
+                .put("projectDescription", "project-3-desc")
+                .put("projectStatus", "completed");
+
+        mongoClient.save("projects", json3, ar -> {
+            if (ar.failed()) {
+                context.fail();
+            }
+            saveAsync.countDown();
+        });
+
+        saveAsync.await();
+
+        ProjectService service = new ProjectServiceImpl(vertx, getConfig(), mongoClient);
+
+        Async async = context.async();
+
+        service.getProjectsByStatus("completed", ar -> {
+            if (ar.failed()) {
+                context.fail(ar.cause().getMessage());
+            } else {
+                assertThat(ar.result(), notNullValue());
+                assertThat(ar.result().size(), equalTo(1));
+                Set<String> projectIds = ar.result().stream().map(p -> p.getProjectId()).collect(Collectors.toSet());
+                assertThat(projectIds.size(), equalTo(1));
+                assertThat(projectIds, allOf(hasItem(projectId3)));
+                async.complete();
+            }
+        });
+    }
+    
+    @Test
     public void testPing(TestContext context) throws Exception {
         ProjectService service = new ProjectServiceImpl(vertx, getConfig(), mongoClient);
 

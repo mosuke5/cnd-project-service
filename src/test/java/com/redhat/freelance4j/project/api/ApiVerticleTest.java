@@ -29,7 +29,9 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.freelance4j.project.model.Product;
+import com.redhat.freelance4j.project.model.Project;
 import com.redhat.freelance4j.project.verticle.service.CatalogService;
+import com.redhat.freelance4j.project.verticle.service.ProjectService;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.DeploymentOptions;
@@ -48,6 +50,7 @@ public class ApiVerticleTest {
     private Vertx vertx;
     private Integer port;
     private CatalogService catalogService;
+    private ProjectService projectService;
 
     /**
      * Before executing our test, let's deploy our verticle.
@@ -74,9 +77,10 @@ public class ApiVerticleTest {
 
       //Mock the catalog Service
       catalogService = mock(CatalogService.class);
+      projectService = mock(ProjectService.class);
 
       // We pass the options as the second parameter of the deployVerticle method.
-      vertx.deployVerticle(new ApiVerticle(catalogService), options, context.asyncAssertSuccess());
+      vertx.deployVerticle(new ApiVerticle(catalogService, projectService), options, context.asyncAssertSuccess());
     }
 
     /**
@@ -303,5 +307,161 @@ public class ApiVerticleTest {
             .exceptionHandler(context.exceptionHandler())
             .end();
     }
+    
+    
+    @Test
+    public void testGetProjects(TestContext context) throws Exception {
+    	String projectId1 = "111111";
+        JsonObject json1 = new JsonObject()
+                .put("projectId", projectId1)
+                .put("ownerFirstName", "Masao")
+                .put("ownerLastName", "Kato")
+                .put("ownerEmail", "masao.kato@example.com")
+                .put("projectTitle", "project-1")
+                .put("projectDescription", "project-1-desc")
+                .put("projectStatus", "open");
+        String projectId2 = "222222";
+        JsonObject json2 = new JsonObject()
+                .put("projectId", projectId2)
+                .put("ownerFirstName", "Kana")
+                .put("ownerLastName", "Komiya")
+                .put("ownerEmail", "kana.komiya@example.com")
+                .put("projectTitle", "project-2")
+                .put("projectDescription", "project-2-desc")
+                .put("projectStatus", "open");
+        List<Project> projects = new ArrayList<>();
+        projects.add(new Project(json1));
+        projects.add(new Project(json2));
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation){
+                Handler<AsyncResult<List<Project>>> handler = invocation.getArgument(0);
+                handler.handle(Future.succeededFuture(projects));
+                return null;
+             }
+         }).when(projectService).getProjects(any());
 
+        Async async = context.async();
+        vertx.createHttpClient().get(port, "localhost", "/projects", response -> {
+                assertThat(response.statusCode(), equalTo(200));
+                assertThat(response.headers().get("Content-type"), equalTo("application/json"));
+                response.bodyHandler(body -> {
+                    JsonArray json = body.toJsonArray();
+                    Set<String> projectIds =  json.stream()
+                            .map(j -> new Project((JsonObject)j))
+                            .map(p -> p.getProjectId())
+                            .collect(Collectors.toSet());
+                    assertThat(projectIds.size(), equalTo(2));
+                    assertThat(projectIds, allOf(hasItem(projectId1),hasItem(projectId2)));
+                    verify(projectService).getProjects(any());
+                    async.complete();
+                })
+                .exceptionHandler(context.exceptionHandler());
+            })
+            .exceptionHandler(context.exceptionHandler())
+            .end();
+    }
+    
+    @Test
+    public void testGetProject(TestContext context) throws Exception {
+    	String projectId1 = "111111";
+        JsonObject json = new JsonObject()
+                .put("projectId", projectId1)
+                .put("ownerFirstName", "Masao")
+                .put("ownerLastName", "Kato")
+                .put("ownerEmail", "masao.kato@example.com")
+                .put("projectTitle", "project-1")
+                .put("projectDescription", "project-1-desc")
+                .put("projectStatus", "open");
+        Project project = new Project(json);
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation){
+                Handler<AsyncResult<Project>> handler = invocation.getArgument(1);
+                handler.handle(Future.succeededFuture(project));
+                return null;
+             }
+         }).when(projectService).getProject(eq("111111"),any());
+
+        Async async = context.async();
+        vertx.createHttpClient().get(port, "localhost", "/project/111111", response -> {
+                assertThat(response.statusCode(), equalTo(200));
+                assertThat(response.headers().get("Content-type"), equalTo("application/json"));
+                response.bodyHandler(body -> {
+                    JsonObject result = body.toJsonObject();
+                    assertThat(result, notNullValue());
+                    assertThat(result.containsKey("projectId"), is(true));
+                    assertThat(result.getString("projectId"), equalTo("111111"));
+                    verify(projectService).getProject(eq("111111"),any());
+                    async.complete();
+                })
+                .exceptionHandler(context.exceptionHandler());
+            })
+            .exceptionHandler(context.exceptionHandler())
+            .end();
+    }
+    
+    
+    @Test
+    public void testGetProjectsByStatus(TestContext context) throws Exception {
+    	String projectId1 = "111111";
+        JsonObject json1 = new JsonObject()
+                .put("projectId", projectId1)
+                .put("ownerFirstName", "Masao")
+                .put("ownerLastName", "Kato")
+                .put("ownerEmail", "masao.kato@example.com")
+                .put("projectTitle", "project-1")
+                .put("projectDescription", "project-1-desc")
+                .put("projectStatus", "open");
+        String projectId2 = "222222";
+        JsonObject json2 = new JsonObject()
+                .put("projectId", projectId2)
+                .put("ownerFirstName", "Kana")
+                .put("ownerLastName", "Komiya")
+                .put("ownerEmail", "kana.komiya@example.com")
+                .put("projectTitle", "project-2")
+                .put("projectDescription", "project-2-desc")
+                .put("projectStatus", "open");
+        String projectId3 = "333333";
+        JsonObject json3 = new JsonObject()
+                .put("projectId", projectId3)
+                .put("ownerFirstName", "Mai")
+                .put("ownerLastName", "Oyama")
+                .put("ownerEmail", "mai.oyama@example.com")
+                .put("projectTitle", "project-3")
+                .put("projectDescription", "project-3-desc")
+                .put("projectStatus", "completed");
+        List<Project> projects = new ArrayList<>();
+        projects.add(new Project(json1));
+        projects.add(new Project(json2));
+        projects.add(new Project(json3));
+        
+        
+        doAnswer(new Answer<Void>() {
+            public Void answer(InvocationOnMock invocation){
+                Handler<AsyncResult<List<Project>>> handler = invocation.getArgument(1);
+                handler.handle(Future.succeededFuture(projects));
+                return null;
+             }
+         }).when(projectService).getProjectsByStatus(eq("open"), any());
+        
+        Async async = context.async();
+        vertx.createHttpClient().get(port, "localhost", "/projects/open", response -> {
+        		assertThat(response.statusCode(), equalTo(200));
+                assertThat(response.headers().get("Content-type"), equalTo("application/json"));
+                response.bodyHandler(body -> {
+                    JsonArray json = body.toJsonArray();
+                    Set<String> projectIds = json.stream()
+                            .map(j -> new Project((JsonObject)j))
+                            .map(p -> p.getProjectId())
+                            .collect(Collectors.toSet());
+                    assertThat(projectIds.size(), equalTo(3));
+                    assertThat(projectIds, allOf(hasItem(projectId1),hasItem(projectId2)));
+                    verify(projectService).getProjectsByStatus(eq("open"), any());
+                    async.complete();
+                })
+                .exceptionHandler(context.exceptionHandler());
+                
+            })
+            .exceptionHandler(context.exceptionHandler())
+            .end();
+    }
 }

@@ -3,7 +3,9 @@ package com.redhat.freelance4j.project.api;
 import java.util.List;
 
 import com.redhat.freelance4j.project.model.Product;
+import com.redhat.freelance4j.project.model.Project;
 import com.redhat.freelance4j.project.verticle.service.CatalogService;
+import com.redhat.freelance4j.project.verticle.service.ProjectService;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -18,9 +20,11 @@ import io.vertx.ext.web.handler.BodyHandler;
 public class ApiVerticle extends AbstractVerticle {
 
     private CatalogService catalogService;
+    private ProjectService projectService;
 
-    public ApiVerticle(CatalogService catalogService) {
+    public ApiVerticle(CatalogService catalogService, ProjectService projectService) {
         this.catalogService = catalogService;
+        this.projectService = projectService;
     }
 
     @Override
@@ -32,6 +36,10 @@ public class ApiVerticle extends AbstractVerticle {
         router.get("/product/:itemId").handler(this::getProduct);
         router.route("/product").handler(BodyHandler.create());
         router.post("/product").handler(this::addProduct);
+        router.get("/projects").handler(this::getProjects);
+        router.get("/project/:projectId").handler(this::getProject);
+        router.get("/projects/:projectStatus").handler(this::getProjectsByStatus);
+        router.route("/project").handler(BodyHandler.create());
 
         //Health Checks
         router.get("/health/readiness").handler(rc -> rc.response().end("OK"));
@@ -117,6 +125,62 @@ public class ApiVerticle extends AbstractVerticle {
                 }
             }
         });
+    }
+    
+    private void getProjects(RoutingContext rc) {
+        projectService.getProjects(ar -> {
+            if (ar.succeeded()) {
+                List<Project> projects = ar.result();
+                JsonArray json = new JsonArray();
+                projects.stream()
+                    .map(p -> p.toJson())
+                    .forEach(p -> json.add(p));
+                rc.response()
+                    .putHeader("Content-type", "application/json")
+                    .end(json.encodePrettily());
+            } else {
+                rc.fail(ar.cause());
+            }
+        });
+    }
+    
+    private void getProject(RoutingContext rc) {
+        String projectId = rc.request().getParam("projectid");
+        projectService.getProject(projectId, ar -> {
+            if (ar.succeeded()) {
+                Project project = ar.result();
+                JsonObject json;
+                if (project != null) {
+                    json = project.toJson();
+                    rc.response()
+                        .putHeader("Content-type", "application/json")
+                        .end(json.encodePrettily());
+                } else {
+                    rc.fail(404);
+                }
+            } else {
+                rc.fail(ar.cause());
+            }
+        });
+    }
+    
+    private void getProjectsByStatus(RoutingContext rc) {
+    	String projectStatus = rc.request().getParam("projectstatus");
+        projectService.getProjectsByStatus(projectStatus, ar -> {
+            if (ar.succeeded()) {
+                List<Project> projects = ar.result();
+                JsonArray json = new JsonArray();
+                projects.stream()
+                    .map(p -> p.toJson())
+                    .forEach(p -> json.add(p));
+                rc.response()
+                    .putHeader("Content-type", "application/json")
+                    .end(json.encodePrettily());
+            } else {
+                rc.fail(ar.cause());
+            }
+        });
+        
     }
 
 }

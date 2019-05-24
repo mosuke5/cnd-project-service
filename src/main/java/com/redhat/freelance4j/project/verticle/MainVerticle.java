@@ -3,6 +3,8 @@ package com.redhat.freelance4j.project.verticle;
 import com.redhat.freelance4j.project.api.ApiVerticle;
 import com.redhat.freelance4j.project.verticle.service.CatalogService;
 import com.redhat.freelance4j.project.verticle.service.CatalogVerticle;
+import com.redhat.freelance4j.project.verticle.service.ProjectService;
+import com.redhat.freelance4j.project.verticle.service.ProjectVerticle;
 
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
@@ -51,12 +53,15 @@ public class MainVerticle extends AbstractVerticle {
 
         Future<String> apiVerticleFuture = Future.future();
         Future<String> catalogVerticleFuture = Future.future();
+        Future<String> projectVerticleFuture = Future.future();
 
         CatalogService catalogService = CatalogService.createProxy(vertx);
+        ProjectService projectService = ProjectService.createProxy(vertx);
         DeploymentOptions options = new DeploymentOptions();
         options.setConfig(config);
         vertx.deployVerticle(new CatalogVerticle(), options, catalogVerticleFuture.completer());
-        vertx.deployVerticle(new ApiVerticle(catalogService), options, apiVerticleFuture.completer());
+        vertx.deployVerticle(new ProjectVerticle(), options, projectVerticleFuture.completer());
+        vertx.deployVerticle(new ApiVerticle(catalogService, projectService), options, apiVerticleFuture.completer());
 
         CompositeFuture.all(apiVerticleFuture, catalogVerticleFuture).setHandler(ar -> {
             if (ar.succeeded()) {
