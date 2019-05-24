@@ -1,8 +1,6 @@
 package com.redhat.freelance4j.project.verticle;
 
 import com.redhat.freelance4j.project.api.ApiVerticle;
-import com.redhat.freelance4j.project.verticle.service.CatalogService;
-import com.redhat.freelance4j.project.verticle.service.CatalogVerticle;
 import com.redhat.freelance4j.project.verticle.service.ProjectService;
 import com.redhat.freelance4j.project.verticle.service.ProjectVerticle;
 
@@ -52,18 +50,15 @@ public class MainVerticle extends AbstractVerticle {
     private void deployVerticles(JsonObject config, Future<Void> startFuture) {
 
         Future<String> apiVerticleFuture = Future.future();
-        Future<String> catalogVerticleFuture = Future.future();
         Future<String> projectVerticleFuture = Future.future();
 
-        CatalogService catalogService = CatalogService.createProxy(vertx);
         ProjectService projectService = ProjectService.createProxy(vertx);
         DeploymentOptions options = new DeploymentOptions();
         options.setConfig(config);
-        vertx.deployVerticle(new CatalogVerticle(), options, catalogVerticleFuture.completer());
         vertx.deployVerticle(new ProjectVerticle(), options, projectVerticleFuture.completer());
-        vertx.deployVerticle(new ApiVerticle(catalogService, projectService), options, apiVerticleFuture.completer());
+        vertx.deployVerticle(new ApiVerticle(projectService), options, apiVerticleFuture.completer());
 
-        CompositeFuture.all(apiVerticleFuture, catalogVerticleFuture).setHandler(ar -> {
+        CompositeFuture.all(apiVerticleFuture, projectVerticleFuture).setHandler(ar -> {
             if (ar.succeeded()) {
                 System.out.println("Verticles deployed successfully.");
                 startFuture.complete();
