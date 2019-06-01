@@ -69,9 +69,9 @@ public class ApiVerticleTest {
       port = socket.getLocalPort();
       socket.close();
 
-      DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("catalog.http.port", port));
+      DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("project.http.port", port));
 
-      //Mock the catalog Service
+      //Mock the project Service
       projectService = mock(ProjectService.class);
 
       // We pass the options as the second parameter of the deployVerticle method.
