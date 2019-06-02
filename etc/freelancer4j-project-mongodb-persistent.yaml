@@ -48,13 +48,15 @@ objects:
             env:
             - name: MONGODB_INIT
               value: 
-                db.products.insert({"_id":"329291","projectId":"329291","ownerFirstName":"Mai", "ownerLastName":"Oyama", "ownerEmail":"mai.oyama@exmaple.com", "projectTitle":"project-1","projectDescription":"project-1-desc", "projectStatus":"open"});
-                db.products.insert({"_id":"329292","projectId":"329292","ownerFirstName":"Seiko", "ownerLastName":"Kotani", "ownerEmail":"seiko.kotani@exmaple.com", "projectTitle":"project-2","projectDescription":"project-2-desc", "projectStatus":"open"});
-                db.products.insert({"_id":"329293","projectId":"329293","ownerFirstName":"Niki", "ownerLastName":"Imai", "ownerEmail":"niki.imai@exmaple.com", "projectTitle":"project-3","projectDescription":"project-3-desc", "projectStatus":"completed"});
-                db.products.insert({"_id":"329294","projectId":"329294","ownerFirstName":"Niki", "ownerLastName":"Imai", "ownerEmail":"niki.imai@exmaple.com", "projectTitle":"project-4","projectDescription":"project-4-desc", "projectStatus":"in_progres"});
-                db.products.insert({"_id":"329295","projectId":"329295","ownerFirstName":"Mai", "ownerLastName":"Oyama", "ownerEmail":"mai.oyama@exmaple.com", "projectTitle":"project-5","projectDescription":"project-5-desc", "projectStatus":"cancelled"});
-                db.products.insert({"_id":"329296","projectId":"329296","ownerFirstName":"Niki", "ownerLastName":"Imai", "ownerEmail":"niki.imai@exmaple.com", "projectTitle":"project-6","projectDescription":"project-6-desc", "projectStatus":"in_progress"});
-                db.products.insert({"_id":"329297","projectId":"329297","ownerFirstName":"Seiko", "ownerLastName":"Kotani", "ownerEmail":"seiko.kotani@exmaple.com", "projectTitle":"project-7","projectDescription":"project-7-desc", "projectStatus":"completed"});
+                db.projects.createIndex({ "projectId":1 });
+                db.projects.createIndex({ "projectStatus":1 });
+                db.projects.insert({"_id":"329291","projectId":"329291","ownerFirstName":"Mai", "ownerLastName":"Oyama", "ownerEmail":"mai.oyama@exmaple.com", "projectTitle":"project-1","projectDescription":"project-1-desc", "projectStatus":"open"});
+                db.projects.insert({"_id":"329292","projectId":"329292","ownerFirstName":"Seiko", "ownerLastName":"Kotani", "ownerEmail":"seiko.kotani@exmaple.com", "projectTitle":"project-2","projectDescription":"project-2-desc", "projectStatus":"open"});
+                db.projects.insert({"_id":"329293","projectId":"329293","ownerFirstName":"Niki", "ownerLastName":"Imai", "ownerEmail":"niki.imai@exmaple.com", "projectTitle":"project-3","projectDescription":"project-3-desc", "projectStatus":"completed"});
+                db.projects.insert({"_id":"329294","projectId":"329294","ownerFirstName":"Niki", "ownerLastName":"Imai", "ownerEmail":"niki.imai@exmaple.com", "projectTitle":"project-4","projectDescription":"project-4-desc", "projectStatus":"in_progres"});
+                db.projects.insert({"_id":"329295","projectId":"329295","ownerFirstName":"Mai", "ownerLastName":"Oyama", "ownerEmail":"mai.oyama@exmaple.com", "projectTitle":"project-5","projectDescription":"project-5-desc", "projectStatus":"cancelled"});
+                db.projects.insert({"_id":"329296","projectId":"329296","ownerFirstName":"Niki", "ownerLastName":"Imai", "ownerEmail":"niki.imai@exmaple.com", "projectTitle":"project-6","projectDescription":"project-6-desc", "projectStatus":"in_progress"});
+                db.projects.insert({"_id":"329297","projectId":"329297","ownerFirstName":"Seiko", "ownerLastName":"Kotani", "ownerEmail":"seiko.kotani@exmaple.com", "projectTitle":"project-7","projectDescription":"project-7-desc", "projectStatus":"completed"});
           failurePolicy: ignore
         timeoutSeconds: 600
       resources: {}

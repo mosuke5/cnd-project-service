@@ -10,4 +10,6 @@ $ oc process -f etc/freelancer4j-project-mongodb-persistent.yaml \
 -p PROJECT_DB_PASSWORD=mongo | oc create -f - -n $FREELANCER4J_PRJ
 
 $ oc create configmap project-service --from-file=etc/app-config.yml -n $FREELANCER4J_PRJ
+
+$ mvn clean fabric8:deploy -Popenshift -Dfabric8.namespace=$FREELANCER4J_PRJ
 ```
