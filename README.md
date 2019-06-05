@@ -22,6 +22,13 @@ Tests run: 13, Failures: 0, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 ```
 
+## Continuous Integration in Travis CI
+This repository is integrated with Travis CI.
+When you push to github, Travis CI will test automatically.
+
+Current status is here.
+https://travis-ci.org/mosuke5/cnd-project-service
+
 ## How to deploy to OpneShift
 ```
 $ export FREELANCER4J_PRJ=<your OpenShift project>
